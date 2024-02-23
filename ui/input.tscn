@@ -1,0 +1,22 @@
+[gd_scene load_steps=2 format=3 uid="uid://cxxxxaaligmff"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bhyxx"]
+bg_color = Color(0.113725, 0.133333, 0.160784, 1)
+
+[node name="HBoxContainer" type="HBoxContainer"]
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+
+[node name="Label" type="Label" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "n:"
+
+[node name="LineEdit" type="LineEdit" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/normal = SubResource("StyleBoxFlat_bhyxx")
+text = "100"

@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://3r6jw0u7e1tf"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qdjai"]
+bg_color = Color(0.211765, 0.239216, 0.290196, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_am28y"]
+bg_color = Color(0.227451, 0.243137, 0.270588, 1)
+
+[node name="MarginContainer" type="MarginContainer"]
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_right = 40
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_qdjai")
+theme_override_styles/hover = SubResource("StyleBoxFlat_am28y")
+text = "OK"
