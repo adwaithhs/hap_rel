@@ -5,6 +5,9 @@ const ACTIONS = [{
 	"inputs": [{
 		"key": "n",
 		"value": 100
+	}, {
+		"key": "m",
+		"value": 25
 	}],
 }, {
 	"key": "mutate",
