@@ -2,12 +2,16 @@ extends RefCounted
 
 class_name GridNode
 
-const TOL = 1e-6
+const TOL = Global.TOL
+
+const OUT_IN = Global.OUT_IN
+const IN_IN = Global.IN_IN
+const IN_OUT = Global.IN_OUT
 
 var pos:= Vector2i()
-var genes: Array[Gene]= []
+var genes:= []
 var area:= []
-var subsets: Array[Subset]= []
+var subsets:= []
 var newsubs:= []
 var covered:= false
 
@@ -30,47 +34,20 @@ func init(n):
 	subsets.append(s)
 
 func intersect(g: Gene, radius: float):
+	print(pos)
 	var center = g.center
 	newsubs = []
+	var needed = false
 	for sset in subsets:
 		var int_comps = []
 		var ext_comps = []
 		for comp in sset.comps:
-			var ps: Array[PointData]= []
+			var ps:= []
 			for i in len(comp):
 				var edge = comp[i]
-				if edge is Edge:
-					var normal = (edge.v1 - edge.v2).orthogonal().normalized()
-					var c_line = edge.v1.dot(normal)
-					var c_circ = center.dot(normal)
-					var d = abs(c_line-c_circ)
-					if c_circ >= c_line + radius - TOL:
-						continue # outside
-					if c_circ <= c_line - radius - TOL:
-						continue # strictly inside
-					var th = acos((c_circ - c_line) / radius)
-					var u1 = center + radius * (-normal).rotated(+th)
-					var u2 = center + radius * (-normal).rotated(-th)
-					
-					var pds = []
-					
-					if (u1-u2).length() < TOL:
-						var u = center - radius * normal
-						pds = [PointData.new(u, i, center, IN_IN)]
-					else:
-						pds = [
-							PointData.new(u1, i, center, IN_OUT),
-							PointData.new(u2, i, center, OUT_IN),
-						]
-					for pd in pds:
-						var u = pd.p
-						var v = (edge.v2 - edge.v1)
-						if (
-							v.dot(u-edge.v1) >= 0 and
-							(-v).dot(u-edge.v2) >= 0
-						):
-							ps.append(pd)
-			
+				var arr = edge.split(center, radius, i)
+				ps.append_array(arr)
+				
 			ps.sort_custom(func (a, b): return a.angle < b.angle)
 			ps = merge_points(ps)
 			if len(ps) == 0:
@@ -85,14 +62,28 @@ func intersect(g: Gene, radius: float):
 				if p.dir == OUT_IN:
 					k = i
 					break
-			if k == -1:
-				continue # TODO: only IN_IN
+			var compi = []
+			var compes = []
+			if k == -1: # only IN_IN, only when radius = 1
+				for i in len(ps):
+					var u1 = ps[i-1]
+					var u2 = ps[i]
+					var dir = u2.dir
+					if dir != IN_IN:
+						print("Error")
+						continue
+					var compe = [Arc.new(center, u2.p, u1.p, -1)]
+					compe.append_array(get_b(comp, u1, u2))
+					compes.append(compe)
+						
+				compi.append(Circle.new(center))
+				int_comps.append(compi)
+				ext_comps.append_array(compes)
+				continue
 			var v1
 			var v2
 			var u1
 			var u2
-			var compi = []
-			var compes = []
 			for i in range(k - len(ps), k):
 				var dir = ps[i].dir
 				if dir == OUT_IN:
@@ -110,7 +101,6 @@ func intersect(g: Gene, radius: float):
 				if dir == IN_OUT:
 					v2 = ps[i]
 					compi.append(Arc.new(center, v1.p, v2.p, 1))
-					
 			compi.append_array(get_b(comp, v2, ps[k]))
 			int_comps.append(compi)
 			ext_comps.append_array(compes)
@@ -118,17 +108,27 @@ func intersect(g: Gene, radius: float):
 		if len(int_comps) != 0:
 			var s = Subset.new()
 			s.comps = int_comps
+			if len(sset.genes) < 2:
+				needed = true
+			s.genes.append(g)
 			newsubs.append(s)
 			
 		if len(ext_comps) != 0:
 			var s = Subset.new()
 			s.comps = ext_comps
+			s.out_genes.append(g)
 			newsubs.append(s)
-		
+	
+	return needed
 
 func is_circle_outside(comp, center, radius):
 	for edge in comp:
-		for v in [edge.v1, edge.v2]:
+		var vs
+		if edge is Circle:
+			vs = [edge.center]
+		else:
+			vs = [edge.v1, edge.v2]
+		for v in vs:
 			var d = (v - center).length()
 			if d <= radius - TOL:
 				return false
@@ -140,64 +140,54 @@ func get_b(comp: Array, p1: PointData, p2: PointData):
 	var i = p1.i
 	var j = p2.i
 	var ret = []
-	var u = p1.p
+	
+	if i == j:
+		var edge = comp[i]
+		if edge is Edge:
+			return [Edge.new(p1.p, p2.p)]
+		else: # if edge is Arc or edge is Circle:
+			return [Arc.new(comp[i].center, p1.p, p2.p)]
+	
+	var u1 = p1.p
 	var edge = comp[i]
-	var v = (edge.v2 - edge.v1)
-	v.dot(u-edge.v1)
-	(-v).dot(u-edge.v2) >= 0
-	pass
+	
+	if (u1-edge.v1).length() <= TOL:
+		ret.append(edge)
+	elif (u1-edge.v2).length() < TOL:
+		pass
+	else:
+		if edge is Edge:
+			ret.append(Edge.new(u1, edge.v2))
+		if edge is Arc:
+			ret.append(Arc.new(edge.center, u1, edge.v2, edge.dir))
+	
+	var n = len(comp) if i>j  else 0
+	for k in range(i+1 - n, j):
+		ret.append(comp[k])
+	
+	var u2 = p2.p
+	edge = comp[j]
+	
+	if (u1-edge.v1).length() <= TOL:
+		pass
+	elif (u1-edge.v2).length() < TOL:
+		ret.append(edge)
+	else:
+		if edge is Edge:
+			ret.append(Edge.new(edge.v1, u2))
+		if edge is Arc:
+			ret.append(Arc.new(edge.center, edge.v1, u2, edge.dir))
+	
+	return ret
 
-func merge_points(ps: Array[PointData]):
+func merge_points(ps: Array):
 	var ret = []
 	for i in len(ps):
 		if (
-			(ps[i].p - ps[i-1].p).length() < TOL and 
+			(ps[i].p - ps[i-1].p).length() < 2*TOL and 
 			ps[i].dir == ps[i-1].dir
 		):
 			pass
 		else:
 			ret.append(ps[i])
 	return ret
-
-
-const OUT_IN = -1
-const IN_IN = 0
-const IN_OUT = +1
-
-class PointData extends RefCounted:
-	var p:= Vector2()
-	var i:= -1
-	var dir:= IN_OUT
-	var angle:= 0.0
-	
-	func _init(p: Vector2, i: int, center: Vector2, dir:=IN_OUT):
-		self.p = p
-		self.i = i
-		self.dir = dir
-		self.angle = (p-center).angle()
-
-class Edge extends RefCounted:
-	var v1:= Vector2()
-	var v2:= Vector2()
-	var dir:= 1
-	
-	func _init(v1: Vector2, v2: Vector2, dir:=1):
-		self.v1 = v1
-		self.v2 = v2
-		self.dir = dir
-
-class Arc extends RefCounted:
-	var center:= Vector2()
-	var v1:= Vector2()
-	var v2:= Vector2()
-	var dir:= 1
-	
-	func _init(center: Vector2, v1: Vector2, v2: Vector2, dir:=1):
-		self.center = center
-		self.v1 = v1
-		self.v2 = v2
-		self.dir = dir
-
-class Subset extends RefCounted:
-	var comps:= []
-	

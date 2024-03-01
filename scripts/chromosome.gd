@@ -2,8 +2,9 @@ extends RefCounted
 
 class_name Chromosome
 
-var genes: Array[Gene]= []
+var genes:= []
 var score = null
+var matrix
 
 static func random(radius, n_genes) -> Chromosome:
 	var child = Chromosome.new()
@@ -19,18 +20,20 @@ func mutate(radius, p, q, dx, dw) -> Chromosome:
 	var child = Chromosome.new()
 	for gene in genes:
 		var g = Gene.new()
-		g.center.x = wrapf(
-			g.center.x + dx*randz(),
-			-1-radius,
-			+1+radius,
-		)
-		g.center.y = wrapf(
-			g.center.y + dx*randz(),
-			-1-radius,
-			+1+radius,
-		)
-		g.weight += randfn(0.0, dw)
-		g.weight /= sqrt(1.0 + dw*dw)
+		if randf() < p:
+			g.center.x = wrapf(
+				gene.center.x + dx*randz(),
+				-1-radius,
+				+1+radius,
+			)
+			g.center.y = wrapf(
+				gene.center.y + dx*randz(),
+				-1-radius,
+				+1+radius,
+			)
+		if randf() < q:
+			g.weight += randfn(0.0, dw)
+			g.weight /= sqrt(1.0 + dw*dw)
 		child.genes.append(g)
 	return child
 
@@ -57,14 +60,16 @@ func cross(ch1) -> Chromosome:
 static func randz():
 	return 2*randf() - 1
 
-var tree_root = null
-var subsets
-var matrix
+func calc_score(radius: float):
+	if score == null:
+		# dissect(radius) TODO
+		score = randf()
 
 func dissect(radius):
 	genes.sort_custom(func(a, b): return a.weight > b.weight)
-	print(genes[0].weight)
+	#print(genes[0].weight, " ", genes[-1].weight)
 	var n = floor(2.0 / radius)
+	#print("n: ", n)
 	matrix = []
 	matrix.resize(n+2)
 	for i in n+2:
@@ -74,7 +79,10 @@ func dissect(radius):
 			l[j] = GridNode.new()
 			l[j].pos = Vector2i(i, j)
 		matrix[i] = l
+	var h = 0
 	for g in genes:
+		g.i = h
+		h+=1
 		var i = get_index(n, g.center.x)
 		var j = get_index(n, g.center.y)
 		matrix[i][j].genes.append(g)
@@ -83,7 +91,8 @@ func dissect(radius):
 		for j in range(1, n+1):
 			matrix[i][j].init(n)
 	for g in genes:
-		var nbhood: Array[GridNode]= []
+		print(g.i)
+		var nbhood:= []
 		for i in range(
 			clampi(g.pos.x - 1, 1, n),
 			clampi(g.pos.x + 1, 1, n) + 1
@@ -92,16 +101,17 @@ func dissect(radius):
 				clampi(g.pos.y - 1, 1, n),
 				clampi(g.pos.y + 1, 1, n) + 1,
 			):
-				nbhood.append(matrix[i][j])
-		var nh = []
+				var node = matrix[i][j]
+				if true: # TODO intersect(node, gene) != phi:
+					nbhood.append(node)
+		
+		var needed = false
 		for node in nbhood:
-			if true: #intersect(node, gene) != phi:
-				nh.append(node)
-		nbhood = nh
-		for node in nbhood:
-			if node.covered:
-				continue
-			node.intersect(g, radius)
+			needed = node.intersect(g, radius)
+		if needed:
+			g.active = true
+			for node in nbhood:
+				node.subsets = node.newsubs
 		for node in nbhood:
 			node.newsubs = []
 

@@ -13,3 +13,9 @@ func copy():
 	g.center = center
 	g.weight = weight
 	return g
+
+func print():
+	print({
+		"c": center,
+		"w": weight,
+	})
