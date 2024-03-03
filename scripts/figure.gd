@@ -5,22 +5,18 @@ const WIDTH = 4
 @export
 var size:= 150
 
-var pool
-var i:= -1
-
-func _ready():
-	pass # Replace with function body.
-
+var pool: Pool
 
 func _draw():
 	draw_square(size)
 	if pool == null:
 		return
+	var i = pool.i
 	if not(i >= 1 and i <= len(pool.chromosomes)):
 		return
 	var ch : Chromosome= pool.chromosomes[i-1]
 	for g in ch.genes:
-		#if g.active:
+		if g.active:
 			my_draw_circle(g.center*size, pool.radius*size)
 
 func my_draw_circle(center: Vector2, radius: float, color:= Color.RED):

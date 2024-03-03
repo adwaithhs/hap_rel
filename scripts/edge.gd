@@ -53,3 +53,6 @@ func split(center: Vector2, radius: float, i: int) -> Array:
 		):
 			ret.append(pd)
 	return ret
+
+static func from(d):
+	return Edge.new(d.v1, d.v2)

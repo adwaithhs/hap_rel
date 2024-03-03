@@ -4,27 +4,43 @@ extends Control
 var actions_menu = $Actions
 @onready
 var figure = $Figure
+@onready
+var index_input = $MarginContainer/CenterContainer/IndexInput
+@onready
+var label = $PanelContainer/MarginContainer/Label
 
 var pool:= Pool.new()
 
 func _ready():
 	pool.radius = 0.6
 	figure.pool = pool
-	figure.i = 1
+	index_input.pool = pool
 	actions_menu.action_oked.connect(on_action)
+	index_input.i_changed.connect(on_i_changed)
 	
-	var radius = 0.5
-	seed(162)
-	var ch = Chromosome.random(radius, 25)
-	ch.dissect(radius)
-	get_tree().quit()
-	pool.add(ch)
+	var s = randi_range(0, 1000)
+	print("seed: ", s)
+	seed(s)
+	#var radius = 0.5
+	#seed(162)
+	#var ch = Chromosome.random(radius, 25)
+	#ch.dissect(radius)
+	#pool.add(ch)
 
-
-func fprint(x:float):
-	print(x/2)
+func on_i_changed():
+	figure.queue_redraw()
+	label.text = ""
+	if pool.i < 1: return
+	if pool.i > len(pool.chromosomes): return
+	var ch = pool.chromosomes[pool.i-1]
+	label.text = (
+		"score: " + str(ch.score) + "\n" +
+		"r: " + str(ch.score_r) + "\n" +
+		"g: " + str(ch.score_g) + "\n"
+	)
 
 func on_action(key, data):
+	print(key)
 	var next = []
 	if key == "random":
 		for i in data.n:
@@ -48,5 +64,14 @@ func on_action(key, data):
 	for ch in next:
 		pool.add(ch)
 	pool.sort()
-	figure.queue_redraw()
+	
+	if key == "discard":
+		if len(pool.chromosomes) > data.n:
+			pool.chromosomes.resize(data.n)
+			pool.i = clamp(pool.i, 1, data.n)
+			var t = Time.get_unix_time_from_system()
+			var file = FileAccess.open("res://saves/pools/"+str(t), FileAccess.WRITE)
+			file.store_string(JSON.stringify(pool.to_dict(), "	"))
+	on_i_changed()
+	print("done")
 

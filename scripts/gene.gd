@@ -14,6 +14,13 @@ func copy():
 	g.weight = weight
 	return g
 
+func to_dict():
+	return {
+		"center": center,
+		"weight": weight,
+		"active": active,
+	}
+
 func print():
 	print({
 		"c": center,

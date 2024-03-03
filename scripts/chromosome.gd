@@ -5,6 +5,17 @@ class_name Chromosome
 var genes:= []
 var score = null
 var matrix
+var n
+var distn = {}
+
+func to_dict():
+	var gs = []
+	for gene in genes:
+		gs.append(gene.to_dict())
+	return{
+		"genes": gs,
+		"distn": distn
+	}
 
 static func random(radius, n_genes) -> Chromosome:
 	var child = Chromosome.new()
@@ -19,7 +30,7 @@ static func random(radius, n_genes) -> Chromosome:
 func mutate(radius, p, q, dx, dw) -> Chromosome:
 	var child = Chromosome.new()
 	for gene in genes:
-		var g = Gene.new()
+		var g = gene.copy()
 		if randf() < p:
 			g.center.x = wrapf(
 				gene.center.x + dx*randz(),
@@ -60,16 +71,37 @@ func cross(ch1) -> Chromosome:
 static func randz():
 	return 2*randf() - 1
 
-func calc_score(radius: float):
-	if score == null:
-		# dissect(radius) TODO
-		score = randf()
+var last_r = 0
+var score_r = 0
+var score_g = 0
 
-func dissect(radius):
+func calc_score(radius: float, rel:= 0.9, repeat:= false):
+	if score == null or repeat:
+		if abs(last_r - radius) > Global.TOL:
+			dissect(radius) #TODO
+			last_r = radius
+		var gene_cost = 0
+		for gene in genes:
+			if gene.active:
+				gene_cost+=1
+		var f = 1 - rel
+		var total_f = 0
+		distn = {}
+		for l in matrix:
+			for node in l:
+				for sset in node.subsets:
+					var n = len(sset.genes)
+					if n not in distn:
+						distn[n] = 0.0
+					distn[n] += sset.get_area(radius)
+					total_f += sset.get_fail(f) * sset.get_area(radius)
+		score_r = 1 - total_f / 4.0
+		score_g = gene_cost / 100.0
+		score = score_r - score_g
+
+func init_matrix(radius: float):
 	genes.sort_custom(func(a, b): return a.weight > b.weight)
-	#print(genes[0].weight, " ", genes[-1].weight)
-	var n = floor(2.0 / radius)
-	#print("n: ", n)
+	n = floor(2.0 / radius)
 	matrix = []
 	matrix.resize(n+2)
 	for i in n+2:
@@ -79,10 +111,8 @@ func dissect(radius):
 			l[j] = GridNode.new()
 			l[j].pos = Vector2i(i, j)
 		matrix[i] = l
-	var h = 0
-	for g in genes:
-		g.i = h
-		h+=1
+	for h in len(genes):
+		var g = genes[h]
 		var i = get_index(n, g.center.x)
 		var j = get_index(n, g.center.y)
 		matrix[i][j].genes.append(g)
@@ -90,24 +120,33 @@ func dissect(radius):
 	for i in range(1, n+1):
 		for j in range(1, n+1):
 			matrix[i][j].init(n)
-	for g in genes:
-		print(g.i)
-		var nbhood:= []
-		for i in range(
-			clampi(g.pos.x - 1, 1, n),
-			clampi(g.pos.x + 1, 1, n) + 1
+
+func get_index(n: int, x: float):
+	var i = floor((x + 1.0) / 2 * n) + 1
+	return clamp(i, 0, n+1)
+
+func get_nbhd(g: Gene):
+	var nbhood:= []
+	for i in range(
+		clampi(g.pos.x - 1, 1, n),
+		clampi(g.pos.x + 1, 1, n) + 1
+	):
+		for j in range(
+			clampi(g.pos.y - 1, 1, n),
+			clampi(g.pos.y + 1, 1, n) + 1,
 		):
-			for j in range(
-				clampi(g.pos.y - 1, 1, n),
-				clampi(g.pos.y + 1, 1, n) + 1,
-			):
-				var node = matrix[i][j]
-				if true: # TODO intersect(node, gene) != phi:
-					nbhood.append(node)
-		
+			var node = matrix[i][j]
+			if true: # TODO intersect(node, gene) != phi:
+				nbhood.append(node)
+	return nbhood
+
+func dissect(radius: float):
+	init_matrix(radius)
+	for g in genes:
+		var nbhood = get_nbhd(g)
 		var needed = false
 		for node in nbhood:
-			needed = node.intersect(g, radius)
+			needed = node.slice(g, radius)
 		if needed:
 			g.active = true
 			for node in nbhood:
@@ -115,6 +154,3 @@ func dissect(radius):
 		for node in nbhood:
 			node.newsubs = []
 
-func get_index(n: int, x: float):
-	var i = floor((x + 1.0) / 2 * n) + 1
-	return clamp(i, 0, n+1)

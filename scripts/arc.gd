@@ -40,6 +40,12 @@ func split(center: Vector2, radius:float, i: int) -> Array:
 	var b1 = v.rotated(+th).angle()
 	var b2 = v.rotated(-th).angle()
 	
+	if dir < 0:
+		var temp = b1
+		b1 = b2
+		b2 = temp
+		th = -th
+	
 	var ret = []
 	if is_inside(b1):
 		ret.append(PointData.new(self.center + radius * v.rotated(+th), i, center, OUT_IN))
@@ -51,7 +57,15 @@ func split(center: Vector2, radius:float, i: int) -> Array:
 func is_inside(b: float):
 	var a1 = (v1 - center).angle()
 	var a2 = (v2 - center).angle()
+	if dir < 0:
+		var temp = a1
+		a1 = a2
+		a2 = temp
 	if a2 < a1:
 		return b > a1 or b < a2
 	else:
 		return b > a1 and b < a2
+
+
+static func from(d):
+	return Arc.new(d.c, d.v1, d.v2, d.dir)

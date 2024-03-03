@@ -33,21 +33,23 @@ func init(n):
 	s.comps.append(area)
 	subsets.append(s)
 
-func intersect(g: Gene, radius: float):
-	print(pos)
+func slice(g: Gene, radius: float):
 	var center = g.center
 	newsubs = []
 	var needed = false
-	for sset in subsets:
+	for f in len(subsets):
+		var sset = subsets[f]
 		var int_comps = []
 		var ext_comps = []
-		for comp in sset.comps:
+		
+		for h in len(sset.comps):
+			var comp = sset.comps[h]
 			var ps:= []
 			for i in len(comp):
 				var edge = comp[i]
 				var arr = edge.split(center, radius, i)
 				ps.append_array(arr)
-				
+			
 			ps.sort_custom(func (a, b): return a.angle < b.angle)
 			ps = merge_points(ps)
 			if len(ps) == 0:
@@ -85,29 +87,32 @@ func intersect(g: Gene, radius: float):
 			var u1
 			var u2
 			for i in range(k - len(ps), k):
-				var dir = ps[i].dir
+				var pd = ps[i]
+				var dir = pd.dir
 				if dir == OUT_IN:
-					v1 = ps[i]
-					u1 = ps[i]
+					v1 = pd
+					u1 = pd
 					if v2 != null:
 						compi.append_array(get_b(comp, v2, v1))
 				else:
-					u2 = ps[i]
+					u2 = pd
 					var compe = [Arc.new(center, u2.p, u1.p, -1)]
 					compe.append_array(get_b(comp, u1, u2))
 					compes.append(compe)
 					if dir == IN_IN:
 						u1 = u2
 				if dir == IN_OUT:
-					v2 = ps[i]
+					v2 = pd
 					compi.append(Arc.new(center, v1.p, v2.p, 1))
-			compi.append_array(get_b(comp, v2, ps[k]))
+			var x = get_b(comp, v2, ps[k])
+			compi.append_array(x)
 			int_comps.append(compi)
 			ext_comps.append_array(compes)
 		
 		if len(int_comps) != 0:
 			var s = Subset.new()
 			s.comps = int_comps
+			s.genes = sset.genes.duplicate()
 			if len(sset.genes) < 2:
 				needed = true
 			s.genes.append(g)
@@ -116,7 +121,7 @@ func intersect(g: Gene, radius: float):
 		if len(ext_comps) != 0:
 			var s = Subset.new()
 			s.comps = ext_comps
-			s.out_genes.append(g)
+			s.genes = sset.genes.duplicate()
 			newsubs.append(s)
 	
 	return needed

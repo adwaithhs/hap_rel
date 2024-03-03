@@ -37,3 +37,6 @@ func split(center: Vector2, radius:float, i: int) -> Array:
 	
 	return ret
 
+
+static func from(d):
+	return Circle.new(d.c)

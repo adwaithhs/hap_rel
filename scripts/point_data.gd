@@ -11,3 +11,4 @@ func _init(p: Vector2, i: int, center: Vector2, dir:=Global.IN_OUT):
 	self.i = i
 	self.dir = dir
 	self.angle = (p-center).angle()
+
