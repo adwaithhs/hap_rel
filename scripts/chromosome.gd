@@ -17,6 +17,45 @@ func to_dict():
 		"distn": distn
 	}
 
+static func from_dict(d, radius:=0.6, mult_g:=0.01, mult_d:=1.0):
+	var ch = Chromosome.new()
+	ch.distn = d.distn
+	for g in d.genes:
+		ch.genes.append(Gene.from_dict(g))
+	var rel = 0.9
+	var gene_cost = 0
+	for gene in ch.genes:
+		if gene.active:
+			gene_cost+=1
+	var f = 1 - rel
+	var total_f = 0
+
+	for n in ch.distn:
+		total_f += pow(f, int(n)) * float(ch.distn[n])
+	
+	var m = len(ch.genes)
+	var k = 0
+	var d_sum = 0.0
+	for i in m:
+		for j in i:
+			var g1 = ch.genes[i]
+			var g2 = ch.genes[j]
+			if abs(g1.center.x) > 1.0: continue
+			if abs(g1.center.y) > 1.0: continue
+			if abs(g2.center.x) > 1.0: continue
+			if abs(g2.center.y) > 1.0: continue
+			var d1 = (g1.center - g2.center).length()
+			d_sum += pow(0.1, d1/radius)
+			k += 1
+	
+	ch.score_r = 1 - total_f / 4.0
+	ch.cost_g = gene_cost * mult_g
+	ch.cost_d = d_sum / k * mult_d
+	ch.score = ch.score_r - ch.cost_g - ch.cost_d
+
+	
+	return ch
+
 static func random(radius, n_genes) -> Chromosome:
 	var child = Chromosome.new()
 	for i in n_genes:
@@ -73,12 +112,15 @@ static func randz():
 
 var last_r = 0
 var score_r = 0
-var score_g = 0
+var cost_g = 0
+var cost_d = 0
 
-func calc_score(radius: float, rel:= 0.9, repeat:= false):
+func calc_score(radius: float, repeat:= false, rel:= 0.9, mult_g:=0.01, mult_d:=1.0):
 	if score == null or repeat:
 		if abs(last_r - radius) > Global.TOL:
-			dissect(radius) #TODO
+			var ret = dissect(radius)
+			if ret is String and ret == "error":
+				return "error"
 			last_r = radius
 		var gene_cost = 0
 		for gene in genes:
@@ -95,9 +137,26 @@ func calc_score(radius: float, rel:= 0.9, repeat:= false):
 						distn[n] = 0.0
 					distn[n] += sset.get_area(radius)
 					total_f += sset.get_fail(f) * sset.get_area(radius)
+		
+		var m = len(genes)
+		var k = 0
+		var d_sum = 0.0
+		for i in m:
+			for j in i:
+				var g1 = genes[i]
+				var g2 = genes[j]
+				if abs(g1.center.x) > 1.0: continue
+				if abs(g1.center.y) > 1.0: continue
+				if abs(g2.center.x) > 1.0: continue
+				if abs(g2.center.y) > 1.0: continue
+				var d = (g1.center - g2.center).length()
+				d_sum += pow(0.1, d/radius)
+				k += 1
+		
 		score_r = 1 - total_f / 4.0
-		score_g = gene_cost / 100.0
-		score = score_r - score_g
+		cost_g = gene_cost * mult_g
+		cost_d = d_sum / k * mult_d
+		score = score_r - cost_g - cost_d
 
 func init_matrix(radius: float):
 	genes.sort_custom(func(a, b): return a.weight > b.weight)
@@ -146,7 +205,11 @@ func dissect(radius: float):
 		var nbhood = get_nbhd(g)
 		var needed = false
 		for node in nbhood:
-			needed = node.slice(g, radius)
+			var ret = node.slice(g, radius)
+			if ret is String and ret == "error":
+				return "error"
+			if ret:
+				needed = true
 		if needed:
 			g.active = true
 			for node in nbhood:

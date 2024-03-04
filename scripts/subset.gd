@@ -23,12 +23,14 @@ func get_area(radius: float):
 				th = abs(th)
 				var a1 = (th - sin(th)) / 2 * radius * radius
 				area += sign(edge.dir) * a1
-		var n = len(ps)
-		ps.append(ps[0])
-		ps.append(ps[0])
+		
+		if len(ps) % 2 != 0:
+			ps.append(ps[0])
 		var a = 0.0
-		for i in range(0, n, 2):
-			a += ps[i+1].x*(ps[i+2].y - ps[i].y) + ps[i+1].y *(ps[i].x - ps[i+2].x)
+		for i in range(0, len(ps), 2):
+			var i1 = wrap(i+1, 0, len(ps))
+			var i2 = wrap(i+2, 0, len(ps))
+			a += ps[i1].x*(ps[i2].y - ps[i].y) + ps[i1].y *(ps[i].x - ps[i2].x)
 		a /= 2
 		area += a
 	

@@ -16,10 +16,17 @@ func copy():
 
 func to_dict():
 	return {
-		"center": center,
+		"center": [center.x, center.y],
 		"weight": weight,
 		"active": active,
 	}
+
+static func from_dict(d):
+	var g = Gene.new()
+	g.center = Vector2(d.center[0], d.center[1])
+	g.weight = d.weight
+	g.active = d.active
+	return g
 
 func print():
 	print({

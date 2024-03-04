@@ -12,6 +12,46 @@ func run():
 	
 	pass
 
+const OUT_IN = +1
+const IN_IN = 0
+const IN_OUT = -1
+
+func test_inside():
+	for dirs in [
+		[IN_IN, IN_IN],
+		[OUT_IN, IN_OUT, OUT_IN, IN_IN, IN_IN, IN_OUT],
+		[],
+		[OUT_IN, IN_IN],
+		[IN_OUT, IN_IN],
+		[OUT_IN, IN_OUT, IN_IN, IN_IN, IN_OUT],
+		[OUT_IN, IN_OUT, OUT_IN, IN_IN, IN_IN],
+		[OUT_IN, IN_OUT, IN_OUT, OUT_IN, IN_IN, IN_IN, IN_OUT],
+		[IN_OUT, OUT_IN, IN_IN, IN_IN, IN_OUT],
+		
+	]:
+		var ps = []
+		for dir in dirs:
+			ps.append({"dir":dir})
+		
+		print(GridNode.is_fine(ps))
+
+func test_area():
+	for n in 10:
+		var ps = []
+		for i in n:
+			ps.append(Vector2.RIGHT.rotated(i*2*PI/n))
+		
+		var a_true = n*sin(2*PI/n)/2
+		
+		if len(ps) % 2 != 0:
+			ps.append(ps[0])
+		var a = 0.0
+		for i in range(0, len(ps), 2):
+			var i1 = wrap(i+1, 0, len(ps))
+			var i2 = wrap(i+2, 0, len(ps))
+			a += ps[i1].x*(ps[i2].y - ps[i].y) + ps[i1].y *(ps[i].x - ps[i2].x)
+		a /= 2
+		print(a, " ", a_true)
 
 func test_d2():
 	var ch = Chromosome.new()

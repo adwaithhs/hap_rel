@@ -1,9 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://c62anea0j7c64"]
+[gd_scene load_steps=9 format=3 uid="uid://c62anea0j7c64"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_txuo4"]
 [ext_resource type="PackedScene" uid="uid://cnnsmvnt4xthm" path="res://ui/action_list.tscn" id="2_xh8st"]
 [ext_resource type="Script" path="res://scripts/figure.gd" id="3_exggv"]
 [ext_resource type="PackedScene" uid="uid://d4hp4oqdh35yu" path="res://ui/index_input.tscn" id="4_5h2pf"]
+[ext_resource type="Script" path="res://test/count_c.gd" id="5_pbr8f"]
+[ext_resource type="Script" path="res://test/circle_tool.gd" id="5_qdpp2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cwf70"]
 bg_color = Color(0.129412, 0.14902, 0.180392, 1)
@@ -70,3 +72,52 @@ theme_override_constants/margin_bottom = 4
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_4fe8p")
+
+[node name="Control" type="Panel" parent="."]
+visible = false
+custom_minimum_size = Vector2(300, 300)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -150.0
+offset_right = 150.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_pbr8f")
+
+[node name="Cicle" type="Node2D" parent="Control"]
+position = Vector2(55, 62)
+script = ExtResource("5_qdpp2")
+
+[node name="Cicle2" type="Node2D" parent="Control"]
+position = Vector2(143, 82)
+script = ExtResource("5_qdpp2")
+
+[node name="Cicle3" type="Node2D" parent="Control"]
+position = Vector2(237, 58)
+script = ExtResource("5_qdpp2")
+
+[node name="Cicle4" type="Node2D" parent="Control"]
+position = Vector2(53, 234)
+script = ExtResource("5_qdpp2")
+
+[node name="Cicle5" type="Node2D" parent="Control"]
+position = Vector2(149, 236)
+script = ExtResource("5_qdpp2")
+
+[node name="Cicle6" type="Node2D" parent="Control"]
+position = Vector2(255, 235)
+script = ExtResource("5_qdpp2")
+
+[node name="Cicle7" type="Node2D" parent="Control"]
+position = Vector2(15, 141)
+script = ExtResource("5_qdpp2")
+
+[node name="Cicle8" type="Node2D" parent="Control"]
+position = Vector2(231, 159)
+script = ExtResource("5_qdpp2")

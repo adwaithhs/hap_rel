@@ -15,15 +15,17 @@ var i_set = 0
 var i
 var j
 
+var mode = 0
+
 func _ready():
 	#seed(162)
-	#ch = Chromosome.random(radius, 25)
-	var f = FileAccess.open("res://saves/pools/"+"1709469176.4125", FileAccess.READ)
-	var p = Pool.from_dict(JSON.parse_string(f.get_as_text()))
-	ch = p.chromosomes[0]
+	ch = Chromosome.random(radius, 25)
 
 func _input(event):
 	if event is InputEventKey and event.is_pressed():
+		if event.keycode == KEY_A:
+			if mode == 0:
+				mode = 1
 		if event.keycode == KEY_Z:
 			progress = -1
 			subset = null
@@ -43,6 +45,13 @@ func _input(event):
 		if event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT:
 			var v = (event.position - position) / size
 			v.y = -v.y
+			
+			if mode == 1:
+				var g = Gene.new()
+				g.center = v
+				ch.genes.append(g)
+				return
+			
 			if abs(v.x) > 1 or abs(v.y) > 1:
 				return
 			var n = ch.n
@@ -60,7 +69,7 @@ func _input(event):
 			if len(node.subsets) < 1:
 				return
 			subset = node.subsets[i_set]
-			print("area: ", str(subset.get_area(radius)))
+			print(subset.get_area(radius))
 			i_set +=1
 			if i_set >= len(node.subsets):
 				i_set = 0
@@ -135,7 +144,6 @@ func test_ch_step():
 		print("Done")
 		progress = -1
 		subset = null
-		i_set = 0
 		return
 	if progress == -1:
 		ch.init_matrix(radius)
@@ -149,7 +157,6 @@ func test_ch_step():
 	var needed = false
 	for node in nbhood:
 		if node.slice(g, radius) == true:
-			print(node.pos)
 			needed = true
 	if needed:
 		g.active = true

@@ -58,6 +58,8 @@ func slice(g: Gene, radius: float):
 				else:
 					int_comps.append(comp)
 				continue
+			if not is_fine(ps):
+				return "error"
 			var k:= -1
 			for i in len(ps):
 				var p = ps[i]
@@ -72,6 +74,7 @@ func slice(g: Gene, radius: float):
 					var u2 = ps[i]
 					var dir = u2.dir
 					if dir != IN_IN:
+						return "error"
 						print("Error")
 						continue
 					var compe = [Arc.new(center, u2.p, u1.p, -1)]
@@ -104,6 +107,8 @@ func slice(g: Gene, radius: float):
 				if dir == IN_OUT:
 					v2 = pd
 					compi.append(Arc.new(center, v1.p, v2.p, 1))
+			if v2 == null:
+				return "error"
 			var x = get_b(comp, v2, ps[k])
 			compi.append_array(x)
 			int_comps.append(compi)
@@ -148,9 +153,25 @@ func get_b(comp: Array, p1: PointData, p2: PointData):
 	
 	if i == j:
 		var edge = comp[i]
+		
 		if edge is Edge:
-			return [Edge.new(p1.p, p2.p)]
-		else: # if edge is Arc or edge is Circle:
+			if (p1.p - edge.v1).length() < (p2.p - edge.v1).length():
+				return [Edge.new(p1.p, p2.p)]
+		if edge is Arc:
+			var h1 = p1.p - edge.center
+			var h2 = p2.p - edge.center
+			var g1 = edge.v1 - edge.center
+			var g2 = edge.v2 - edge.center
+			var a1 = sign(edge.dir)*g1.angle_to(h1)
+			var a2 = sign(edge.dir)*g1.angle_to(h2)
+			if a1 < 0:
+				a1 += PI
+			if a2 < 0:
+				a2 += PI
+			if a1 < a2:
+				return [Arc.new(comp[i].center, p1.p, p2.p)]
+		
+		if edge is Circle:
 			return [Arc.new(comp[i].center, p1.p, p2.p)]
 	
 	var u1 = p1.p
@@ -166,7 +187,7 @@ func get_b(comp: Array, p1: PointData, p2: PointData):
 		if edge is Arc:
 			ret.append(Arc.new(edge.center, u1, edge.v2, edge.dir))
 	
-	var n = len(comp) if i>j  else 0
+	var n = len(comp) if i>=j  else 0
 	for k in range(i+1 - n, j):
 		ret.append(comp[k])
 	
@@ -196,3 +217,29 @@ func merge_points(ps: Array):
 		else:
 			ret.append(ps[i])
 	return ret
+
+static func is_fine(ps):
+	if len(ps) == 0: return true
+	var inside: bool= ps[0].dir != OUT_IN
+	for p in ps:
+		if p.dir == IN_IN:
+			if not inside:
+				return false
+			inside = true
+		if p.dir == IN_OUT:
+			if not inside:
+				return false
+			inside = false
+		if p.dir == OUT_IN:
+			if inside:
+				return false
+			inside = true
+	if ps[0].dir == OUT_IN:
+		if inside: return false
+	else:
+		if not inside: return false
+	
+	return true
+	
+
+

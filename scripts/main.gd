@@ -18,6 +18,11 @@ func _ready():
 	actions_menu.action_oked.connect(on_action)
 	index_input.i_changed.connect(on_i_changed)
 	
+	var f = FileAccess.open("res://saves/pools/"+"D1709530927.23471", FileAccess.READ)
+	pool = Pool.from_dict(JSON.parse_string(f.get_as_text()))
+	
+	figure.pool = pool
+	index_input.pool = pool
 	var s = randi_range(0, 1000)
 	print("seed: ", s)
 	seed(s)
@@ -36,8 +41,28 @@ func on_i_changed():
 	label.text = (
 		"score: " + str(ch.score) + "\n" +
 		"r: " + str(ch.score_r) + "\n" +
-		"g: " + str(ch.score_g) + "\n"
+		"g: " + str(ch.cost_g) + "\n" +
+		"d: " + str(ch.cost_d) + "\n" +
+		"distn:\n" + JSON.stringify(ch.distn, " ") + "\n"
 	)
+
+func _input(event):
+	if event is InputEventKey and event.is_pressed():
+		if event.keycode == KEY_H:
+			actions_menu.visible = not actions_menu.visible
+			index_input.visible = not index_input.visible
+			label.visible = not label.visible
+		if event.keycode == KEY_P:
+			if pool.i < 1: return
+			if pool.i > len(pool.chromosomes): return
+			var ch = pool.chromosomes[pool.i-1]
+			print((
+				"score: " + str(ch.score) + "\n" +
+				"r: " + str(ch.score_r) + "\n" +
+				"g: " + str(ch.cost_g) + "\n" +
+				"d: " + str(ch.cost_d) + "\n" +
+				"distn:\n" + str(ch.distn) + "\n"
+			))
 
 func on_action(key, data):
 	print(key)
@@ -61,17 +86,40 @@ func on_action(key, data):
 			var ch2: Chromosome= pool.chromosomes[k]
 			var ch = ch1.cross(ch2)
 			next.append(ch)
-	for ch in next:
-		pool.add(ch)
-	pool.sort()
-	
 	if key == "discard":
 		if len(pool.chromosomes) > data.n:
 			pool.chromosomes.resize(data.n)
 			pool.i = clamp(pool.i, 1, data.n)
 			var t = Time.get_unix_time_from_system()
-			var file = FileAccess.open("res://saves/pools/"+str(t), FileAccess.WRITE)
+			var file = FileAccess.open("res://saves/pools/D"+str(t), FileAccess.WRITE)
 			file.store_string(JSON.stringify(pool.to_dict(), "	"))
+	#if key == "rescore":
+		#for ch in pool.chromosomes:
+			#pool.mult_g = data.mult_g
+			#pool.mult_d = data.mult_d
+			#ch.calc_score(pool.radius, true, 0.9, data.mult_g, data.mult_d)
+		#pool.sort()
+	if key == "hex_init":
+		var child = Chromosome.new()
+		for p in Global.hex:
+			var g = Gene.new()
+			g.center = p
+			g.weight = randfn(0.0, 1.0)
+			child.genes.append(g)
+		for p in Global.hex:
+			var g = Gene.new()
+			g.center = Vector2(p.y, p.x)
+			g.weight = randfn(0.0, 1.0)
+			child.genes.append(g)
+		next.append(child)
+	
+	
+	
+	if len(next):
+		for ch in next:
+			pool.add(ch)
+		pool.sort()
+	
 	on_i_changed()
 	print("done")
 

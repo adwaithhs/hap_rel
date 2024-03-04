@@ -39,6 +39,24 @@ const ACTIONS = [{
 		"key": "n",
 		"value": 100
 	}],
+}, {
+	"key": "hex_init",
+	"inputs": [{
+		"key": "n",
+		"value": 100
+	}],
+}, {
+	"key": "test",
+	"inputs": [],
+#}, {
+	#"key": "rescore",
+	#"inputs": [{
+		#"key": "mult_d",
+		#"value": 1.0
+	#}, {
+		#"key": "mult_g",
+		#"value": 0.01
+	#}],
 }]
 
 signal action_oked(key:String)
@@ -60,15 +78,19 @@ func _ready():
 		for input in action.inputs:
 			node = InputScene.instantiate()
 			node.get_node("MarginContainer/Label").text = input.key
-			var edit = node.get_node("LineEdit")
+			var edit: LineEdit= node.get_node("LineEdit")
 			edit.text = str(input.value)
 			edits[input.key] = edit
+			edit.text_submitted.connect(on_text_submitted.bind(action.key, edits))
 			parent.add_child(node)
 		node = ButtonScene.instantiate()
 		node.get_node("Button").button_down.connect(on_ok.bind(action.key, edits))
 		parent.add_child(node)
 
-func on_ok(key, edits):
+func on_text_submitted(text, key, edits):
+	on_ok(key, edits)
+
+func on_ok(key, edits, text=null):
 	var data = {}
 	for k in edits:
 		var edit = edits[k]
