@@ -4,10 +4,6 @@ class_name Arc
 
 const TOL = Global.TOL
 
-const OUT_IN = Global.OUT_IN
-const IN_IN = Global.IN_IN
-const IN_OUT = Global.IN_OUT
-
 var center:= Vector2()
 var v1:= Vector2()
 var v2:= Vector2()
@@ -47,10 +43,24 @@ func split(center: Vector2, radius:float, i: int) -> Array:
 		th = -th
 	
 	var ret = []
-	if is_inside(b1):
-		ret.append(PointData.new(self.center + radius * v.rotated(+th), i, center, OUT_IN))
-	if is_inside(b2):
-		ret.append(PointData.new(self.center + radius * v.rotated(-th), i, center, IN_OUT))
+	var u
+	
+	u = self.center + radius * v.rotated(+th)
+	if (u - v1).length() < TOL:
+		ret.append(PointData.new(u, i, center, PointData.OUT_IN, PointData.V1))
+	elif (u - v2).length() < TOL:
+		ret.append(PointData.new(u, i, center, PointData.OUT_IN, PointData.V2))
+	elif is_inside(b1):
+		ret.append(PointData.new(u, i, center, PointData.OUT_IN))
+	
+	u = self.center + radius * v.rotated(-th)
+	if (u - v1).length() < TOL:
+		ret.append(PointData.new(u, i, center, PointData.IN_OUT, PointData.V1))
+	elif (u - v2).length() < TOL:
+		ret.append(PointData.new(u, i, center, PointData.IN_OUT, PointData.V2))
+	elif is_inside(b2):
+		ret.append(PointData.new(u, i, center, PointData.IN_OUT))
+	
 	
 	return ret
 

@@ -18,7 +18,7 @@ func _ready():
 	actions_menu.action_oked.connect(on_action)
 	index_input.i_changed.connect(on_i_changed)
 	
-	var f = FileAccess.open("res://saves/pools/"+"D1709530927.23471", FileAccess.READ)
+	var f = FileAccess.open("res://saves/pools/"+"D1710427198.94927", FileAccess.READ)
 	pool = Pool.from_dict(JSON.parse_string(f.get_as_text()))
 	
 	figure.pool = pool
@@ -31,6 +31,8 @@ func _ready():
 	#var ch = Chromosome.random(radius, 25)
 	#ch.dissect(radius)
 	#pool.add(ch)
+	
+	on_i_changed()
 
 func on_i_changed():
 	figure.queue_redraw()

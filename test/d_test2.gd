@@ -5,7 +5,7 @@ const WIDTH = 4
 @export
 var size:= 150
 
-var radius:= 0.5
+var radius:= 0.6
 var ch:= Chromosome.new()
 var subset
 var progress = -1
@@ -18,15 +18,32 @@ var j
 func _ready():
 	#seed(162)
 	#ch = Chromosome.random(radius, 25)
-	var f = FileAccess.open("res://saves/pools/"+"1709469176.4125", FileAccess.READ)
-	var p = Pool.from_dict(JSON.parse_string(f.get_as_text()))
-	ch = p.chromosomes[0]
+	#var f = FileAccess.open("res://saves/pools/"+"1709469176.4125", FileAccess.READ)
+	#var p = Pool.from_dict(JSON.parse_string(f.get_as_text()))
+	#ch = p.chromosomes[0] 
+	
+	#var f = FileAccess.open("res://saves/error_chs/1710426926.11682", FileAccess.READ)
+	#ch = Chromosome.from_dict1(JSON.parse_string(f.get_as_text()))
+	
+	var i = 0
+	for c in [
+		Vector2(0.033197, -0.10739),
+		Vector2(-0.892373, -0.061342),
+		Vector2(0.088837, -0.743163),
+	]:
+		var g = Gene.new()
+		g.center = c
+		g.weight = i
+		i -= 1
+		ch.genes.append(g)
+	pass
 
 func _input(event):
 	if event is InputEventKey and event.is_pressed():
 		if event.keycode == KEY_Z:
 			progress = -1
 			subset = null
+			i_set = 0
 			queue_redraw()
 		if event.keycode == KEY_X:
 			test_ch_step()
@@ -35,7 +52,7 @@ func _input(event):
 			progress = -1
 			subset = null
 			i_set = 0
-			while progress < 5:
+			while progress < 20:
 				test_ch_step()
 			queue_redraw()
 	
@@ -59,6 +76,10 @@ func _input(event):
 			var node = ch.matrix[i][j]
 			if len(node.subsets) < 1:
 				return
+			var s = 0.0
+			for subset in node.subsets:
+				s += subset.get_area(radius)
+			print(s)
 			subset = node.subsets[i_set]
 			print("area: ", str(subset.get_area(radius)))
 			i_set +=1
@@ -148,8 +169,10 @@ func test_ch_step():
 	var nbhood = ch.get_nbhd(g)
 	var needed = false
 	for node in nbhood:
-		if node.slice(g, radius) == true:
-			print(node.pos)
+		var ret = node.slice(g, radius)
+		if ret is String and ret == "error":
+			print("error")
+		elif ret:
 			needed = true
 	if needed:
 		g.active = true

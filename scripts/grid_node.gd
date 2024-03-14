@@ -4,9 +4,9 @@ class_name GridNode
 
 const TOL = Global.TOL
 
-const OUT_IN = Global.OUT_IN
-const IN_IN = Global.IN_IN
-const IN_OUT = Global.IN_OUT
+const OUT_IN = PointData.OUT_IN
+const IN_IN = PointData.IN_IN
+const IN_OUT = PointData.IN_OUT
 
 var pos:= Vector2i()
 var genes:= []
@@ -51,7 +51,21 @@ func slice(g: Gene, radius: float):
 				ps.append_array(arr)
 			
 			ps.sort_custom(func (a, b): return a.angle < b.angle)
-			ps = merge_points(ps)
+			
+			#print("comp----")
+			#for e in comp:
+				#e.print()
+			
+			#print("st------")
+			#var st = ""
+			#for p in ps:
+				#st += str(p.i) + " "
+			#print(st)
+			ps = merge_points(ps, comp)
+			#st = ""
+			#for p in ps:
+				#st += str(p.i) + " "
+			#print(st)
 			if len(ps) == 0:
 				if is_circle_outside(comp, center, radius):
 					ext_comps.append(comp)
@@ -59,6 +73,11 @@ func slice(g: Gene, radius: float):
 					int_comps.append(comp)
 				continue
 			if not is_fine(ps):
+				var s = ""
+				for p in ps:
+					s += str(p.dir) + " "
+				print("error is_fine == false")
+				print(s)
 				return "error"
 			var k:= -1
 			for i in len(ps):
@@ -74,9 +93,8 @@ func slice(g: Gene, radius: float):
 					var u2 = ps[i]
 					var dir = u2.dir
 					if dir != IN_IN:
+						print("error impossible")
 						return "error"
-						print("Error")
-						continue
 					var compe = [Arc.new(center, u2.p, u1.p, -1)]
 					compe.append_array(get_b(comp, u1, u2))
 					compes.append(compe)
@@ -104,7 +122,7 @@ func slice(g: Gene, radius: float):
 					compes.append(compe)
 					if dir == IN_IN:
 						u1 = u2
-				if dir == IN_OUT:
+				if dir == PointData.IN_OUT:
 					v2 = pd
 					compi.append(Arc.new(center, v1.p, v2.p, 1))
 			if v2 == null:
@@ -206,8 +224,11 @@ func get_b(comp: Array, p1: PointData, p2: PointData):
 	
 	return ret
 
-func merge_points(ps: Array):
+func merge_points_old(ps: Array):
 	var ret = []
+	if len(ps) <= 1:
+		return ps
+	var is_all_same = true
 	for i in len(ps):
 		if (
 			(ps[i].p - ps[i-1].p).length() < 2*TOL and 
@@ -215,7 +236,32 @@ func merge_points(ps: Array):
 		):
 			pass
 		else:
+			is_all_same = false
 			ret.append(ps[i])
+	if is_all_same:
+		return [ps[0]]
+	return ret
+
+func merge_points(ps: Array, comp: Array):
+	var ret = []
+	if len(ps) <= 1:
+		return ps
+	var is_all_same = true
+	for i in len(ps):
+		var p1 = ps[i]
+		var p2 = ps[i-1]
+		if (
+			(p1.p - p2.p).length() < 2*TOL and
+			p1.is_v != PointData.NOT_V and
+			p2.is_v != PointData.NOT_V and
+			p1.dir == p2.dir
+		):
+			pass
+		else:
+			is_all_same = false
+			ret.append(ps[i])
+	if is_all_same:
+		return [ps[0]]
 	return ret
 
 static func is_fine(ps):

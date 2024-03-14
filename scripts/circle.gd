@@ -4,10 +4,6 @@ class_name Circle
 
 const TOL = Global.TOL
 
-const OUT_IN = Global.OUT_IN
-const IN_IN = Global.IN_IN
-const IN_OUT = Global.IN_OUT
-
 var center:= Vector2()
 
 func _init(center: Vector2):
@@ -32,8 +28,8 @@ func split(center: Vector2, radius:float, i: int) -> Array:
 	var b2 = v.rotated(-th).angle()
 	
 	var ret = []
-	ret.append(PointData.new(self.center + radius * v.rotated(+th), i, center, OUT_IN))
-	ret.append(PointData.new(self.center + radius * v.rotated(-th), i, center, IN_OUT))
+	ret.append(PointData.new(self.center + radius * v.rotated(+th), i, center, PointData.OUT_IN))
+	ret.append(PointData.new(self.center + radius * v.rotated(-th), i, center, PointData.IN_OUT))
 	
 	return ret
 

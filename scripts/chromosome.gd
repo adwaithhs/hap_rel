@@ -17,6 +17,13 @@ func to_dict():
 		"distn": distn
 	}
 
+static func from_dict1(d, radius:=0.6, mult_g:=0.01, mult_d:=1.0):
+	var ch = Chromosome.new()
+	ch.distn = d.distn
+	for g in d.genes:
+		ch.genes.append(Gene.from_dict(g))
+	return ch
+
 static func from_dict(d, radius:=0.6, mult_g:=0.01, mult_d:=1.0):
 	var ch = Chromosome.new()
 	ch.distn = d.distn

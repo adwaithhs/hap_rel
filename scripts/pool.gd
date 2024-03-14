@@ -13,7 +13,9 @@ var mult_d:= 1.0
 
 func add(ch: Chromosome):
 	if ch.calc_score(radius, false, rel, mult_g, mult_d) == "error":
-		pass
+		var t = Time.get_unix_time_from_system()
+		var file = FileAccess.open("res://saves/error_chs/"+str(t), FileAccess.WRITE)
+		file.store_string(JSON.stringify(ch.to_dict(), "	"))
 	else:
 		chromosomes.append(ch)
 
