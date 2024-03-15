@@ -22,20 +22,20 @@ func _ready():
 	#var p = Pool.from_dict(JSON.parse_string(f.get_as_text()))
 	#ch = p.chromosomes[0] 
 	
-	#var f = FileAccess.open("res://saves/error_chs/1710426926.11682", FileAccess.READ)
-	#ch = Chromosome.from_dict1(JSON.parse_string(f.get_as_text()))
+	var f = FileAccess.open("res://saves/error_chs/1710514705.29849", FileAccess.READ)
+	ch = Chromosome.from_dict1(JSON.parse_string(f.get_as_text()))
 	
-	var i = 0
-	for c in [
-		Vector2(0.033197, -0.10739),
-		Vector2(-0.892373, -0.061342),
-		Vector2(0.088837, -0.743163),
-	]:
-		var g = Gene.new()
-		g.center = c
-		g.weight = i
-		i -= 1
-		ch.genes.append(g)
+	#var i = 0
+	#for c in [
+		#Vector2(0.033197, -0.10739),
+		#Vector2(-0.892373, -0.061342),
+		#Vector2(0.088837, -0.743163),
+	#]:
+		#var g = Gene.new()
+		#g.center = c
+		#g.weight = i
+		#i -= 1
+		#ch.genes.append(g)
 	pass
 
 func _input(event):
@@ -52,7 +52,7 @@ func _input(event):
 			progress = -1
 			subset = null
 			i_set = 0
-			while progress < 20:
+			while progress < 22:
 				test_ch_step()
 			queue_redraw()
 	

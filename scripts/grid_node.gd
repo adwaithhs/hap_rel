@@ -51,7 +51,9 @@ func slice(g: Gene, radius: float):
 				ps.append_array(arr)
 			
 			ps.sort_custom(func (a, b): return a.angle < b.angle)
-			
+			#print("pos: ", pos)
+			#print("f: ", f)
+			#print("h: ", h)
 			#print("comp----")
 			#for e in comp:
 				#e.print()
@@ -87,6 +89,7 @@ func slice(g: Gene, radius: float):
 					break
 			var compi = []
 			var compes = []
+			#print("k: ", k)
 			if k == -1: # only IN_IN, only when radius = 1
 				for i in len(ps):
 					var u1 = ps[i-1]
@@ -96,7 +99,8 @@ func slice(g: Gene, radius: float):
 						print("error impossible")
 						return "error"
 					var compe = [Arc.new(center, u2.p, u1.p, -1)]
-					compe.append_array(get_b(comp, u1, u2))
+					var x = get_b(comp, u1, u2)
+					compe.append_array(x)
 					compes.append(compe)
 						
 				compi.append(Circle.new(center))
@@ -114,15 +118,17 @@ func slice(g: Gene, radius: float):
 					v1 = pd
 					u1 = pd
 					if v2 != null:
-						compi.append_array(get_b(comp, v2, v1))
+						var x = get_b(comp, v2, v1)
+						compi.append_array(x)
 				else:
 					u2 = pd
 					var compe = [Arc.new(center, u2.p, u1.p, -1)]
-					compe.append_array(get_b(comp, u1, u2))
+					var x = get_b(comp, u1, u2)
+					compe.append_array(x)
 					compes.append(compe)
-					if dir == IN_IN:
-						u1 = u2
-				if dir == PointData.IN_OUT:
+				if dir == IN_IN:
+					u1 = u2
+				if dir == IN_OUT:
 					v2 = pd
 					compi.append(Arc.new(center, v1.p, v2.p, 1))
 			if v2 == null:
@@ -187,10 +193,10 @@ func get_b(comp: Array, p1: PointData, p2: PointData):
 			if a2 < 0:
 				a2 += PI
 			if a1 < a2:
-				return [Arc.new(comp[i].center, p1.p, p2.p)]
+				return [Arc.new(edge.center, p1.p, p2.p, edge.dir)]
 		
 		if edge is Circle:
-			return [Arc.new(comp[i].center, p1.p, p2.p)]
+			return [Arc.new(edge.center, p1.p, p2.p)]
 	
 	var u1 = p1.p
 	var edge = comp[i]
